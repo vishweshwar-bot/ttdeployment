@@ -1,6 +1,6 @@
 import { useState } from 'react';
-import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
+import api from '../api';
 
 export default function Login() {
   const [credentials, setCredentials] = useState({ username: '', password: '' });
@@ -13,7 +13,7 @@ export default function Login() {
 
   const handleLogin = (e) => {
     e.preventDefault();
-    axios.post('http://localhost:8080/api/auth/login', credentials)
+    api.post('/auth/login', credentials)
       .then(response => {
         // Save the JWT token to local storage
         localStorage.setItem('token', response.data.token);

@@ -1,6 +1,6 @@
 import { useState } from 'react';
-import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
+import api from '../api';
 
 export default function Register() {
   const [user, setUser] = useState({ username: '', password: '', email: '' });
@@ -14,7 +14,7 @@ export default function Register() {
 
   const handleRegister = (e) => {
     e.preventDefault();
-    axios.post('http://localhost:8080/api/auth/register', user)
+    api.post('/auth/register', user)
       .then(response => {
         setMessage('Registration successful! Redirecting to login...');
         setTimeout(() => navigate('/login'), 2000);

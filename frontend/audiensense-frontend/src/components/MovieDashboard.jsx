@@ -121,6 +121,21 @@ export default function MovieDashboard() {
 
   useEffect(() => {
     let active = true;
+
+    // Instantly display cached movies if available (0ms load time)
+    try {
+      const cached = localStorage.getItem('audiensense_movies_cache');
+      if (cached) {
+        const parsed = JSON.parse(cached);
+        if (Array.isArray(parsed) && parsed.length > 0) {
+          setMovies(parsed);
+          setLoading(false);
+        }
+      }
+    } catch (e) {
+      console.warn('Cache read error:', e);
+    }
+
     api.get('/movies?page=0&size=150')
       .then(response => {
         let data = Array.isArray(response.data) ? response.data : response.data.content || [];
@@ -130,9 +145,16 @@ export default function MovieDashboard() {
           if (!b.releaseDate) return -1;
           return new Date(b.releaseDate) - new Date(a.releaseDate);
         });
-        if (active) setMovies(data);
+        if (active) {
+          setMovies(data);
+          try {
+            localStorage.setItem('audiensense_movies_cache', JSON.stringify(data));
+          } catch (e) {
+            console.warn('Cache write error:', e);
+          }
+        }
       })
-      .catch(requestError => active && setError(requestError.response?.data?.message || 'Unable to load movies.'))
+      .catch(requestError => active && setError(requestError.response?.data?.message || 'Unable to connect to backend server.'))
       .finally(() => active && setLoading(false));
     return () => { active = false; };
   }, []);
@@ -218,7 +240,13 @@ export default function MovieDashboard() {
           </>
         )}
 
-        {loading && <div className="audien-panel rounded-2xl p-12 text-center text-sm font-semibold text-slate-500">Loading your movie catalog...</div>}
+        {loading && (
+          <div className="audien-panel rounded-2xl p-12 text-center">
+            <div className="inline-block h-8 w-8 animate-spin rounded-full border-4 border-blue-600 border-t-transparent mb-3"></div>
+            <p className="text-base font-semibold text-slate-700">Loading movie catalog...</p>
+            <p className="mt-1 text-xs text-slate-400">If the server was sleeping (Render free tier), it may take 30-45 seconds to wake up.</p>
+          </div>
+        )}
         {error && <div className="rounded-2xl border border-red-200 bg-red-50 p-6 text-center text-sm font-semibold text-red-700">{error}</div>}
         {!loading && !error && <section>
           <div className="mb-6 flex items-end justify-between gap-4">

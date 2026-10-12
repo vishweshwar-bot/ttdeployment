@@ -5,6 +5,7 @@ import api from '../api';
 export default function Login() {
   const [credentials, setCredentials] = useState({ username: '', password: '' });
   const [error, setError] = useState('');
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const navigate = useNavigate();
 
   const handleChange = (e) => {
@@ -13,6 +14,9 @@ export default function Login() {
 
   const handleLogin = (e) => {
     e.preventDefault();
+    setIsSubmitting(true);
+    setError('');
+
     api.post('/auth/login', credentials)
       .then(response => {
         // Save the JWT token to local storage
@@ -26,8 +30,12 @@ export default function Login() {
         navigate('/movies');
       })
       .catch(err => {
-        setError('Invalid username or password');
+        const errorMsg = err.response?.data?.message || err.response?.data || 'Invalid username or password';
+        setError(typeof errorMsg === 'string' ? errorMsg : 'Invalid username or password');
         console.error(err);
+      })
+      .finally(() => {
+        setIsSubmitting(false);
       });
   };
 
@@ -43,13 +51,20 @@ export default function Login() {
         <form onSubmit={handleLogin} className="space-y-4">
           <label className="block text-sm font-semibold text-slate-700">
             Username
-            <input name="username" value={credentials.username} onChange={handleChange} required className="mt-2 w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-slate-900 outline-none transition focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10" />
+            <input name="username" value={credentials.username} onChange={handleChange} required disabled={isSubmitting} className="mt-2 w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-slate-900 outline-none transition focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10 disabled:opacity-60" />
           </label>
           <label className="block text-sm font-semibold text-slate-700">
             Password
-            <input type="password" name="password" value={credentials.password} onChange={handleChange} required className="mt-2 w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-slate-900 outline-none transition focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10" />
+            <input type="password" name="password" value={credentials.password} onChange={handleChange} required disabled={isSubmitting} className="mt-2 w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-slate-900 outline-none transition focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10 disabled:opacity-60" />
           </label>
-          <button type="submit" className="w-full rounded-xl bg-blue-600 px-4 py-3 font-bold text-white shadow-lg shadow-blue-600/20 transition hover:bg-blue-700">Sign In</button>
+          <button type="submit" disabled={isSubmitting} className="flex w-full items-center justify-center gap-2 rounded-xl bg-blue-600 px-4 py-3 font-bold text-white shadow-lg shadow-blue-600/20 transition hover:bg-blue-700 disabled:opacity-75">
+            {isSubmitting ? (
+              <>
+                <span className="inline-block h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent"></span>
+                <span>Signing In (connecting)...</span>
+              </>
+            ) : 'Sign In'}
+          </button>
         </form>
         <p className="mt-6 text-center text-sm text-slate-500">New to AudienSense? <a href="/register" className="font-bold text-blue-600 hover:text-blue-700">Create an account</a></p>
       </section>

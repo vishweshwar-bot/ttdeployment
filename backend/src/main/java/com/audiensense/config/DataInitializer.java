@@ -22,6 +22,11 @@ public class DataInitializer {
     @Bean(name = "dataInitializerRunner")
     public CommandLineRunner dataInitializer(MovieRepository movieRepository, TvShowRepository tvShowRepository, ReviewRepository reviewRepository, WatchlistRepository watchlistRepository, JdbcTemplate jdbcTemplate, TmdbPosterService tmdbPosterService) {
         return args -> {
+            // If data is already seeded, skip completely for instant startup
+            if (movieRepository.count() > 0 && tvShowRepository.count() > 0) {
+                return;
+            }
+
             if (tvShowRepository.count() == 0) {
                 tvShowRepository.saveAll(List.of(
                         new TvShow("Breaking Bad", "Crime/Drama", LocalDate.of(2008, 1, 20), "https://m.media-amazon.com/images/M/MV5BMjhiMzgxZTctNDc1Ni00OTIxLTlhMTYtZTA3ZWFkODRkNmE2XkEyXkFqcGc@._V1_QL75_UX380_CR0,4,380,562_.jpg", "AMC", 5),
@@ -235,11 +240,6 @@ public class DataInitializer {
     private Movie createMovie(String title, String genre, LocalDate releaseDate, String boxOfficeMetrics,
             double imdbRating, String description, String posterUrl, String leadActors, String director, String verdict,
             String seasonsEpisodes, TmdbPosterService tmdbPosterService) {
-
-        // If the posterUrl is a placeholder, try to fetch the real one via TMDB API
-        if (posterUrl != null && posterUrl.contains("placehold.co") && tmdbPosterService != null) {
-            posterUrl = tmdbPosterService.fetchPosterUrl(title);
-        }
 
         String[] platforms = {"Netflix", "Amazon Prime", "Disney+ Hotstar", "Aha", "Zee5"};
         String ottPlatform = platforms[new java.util.Random().nextInt(platforms.length)];

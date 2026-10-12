@@ -30,12 +30,14 @@ public class ReviewService {
         this.userRepository = userRepository;
     }
 
+    @Transactional(readOnly = true)
     public List<ReviewResponse> getReviews(Long movieId) {
         return reviewRepository.findByMovieIdOrderByCreatedAtDesc(movieId).stream()
                 .map(this::toResponse)
                 .toList();
     }
 
+    @Transactional(readOnly = true)
     public List<com.audiensense.dto.UserReviewResponse> getUserReviews(String username) {
         return reviewRepository.findByUserUsernameOrderByCreatedAtDesc(username).stream()
                 .map(review -> new com.audiensense.dto.UserReviewResponse(

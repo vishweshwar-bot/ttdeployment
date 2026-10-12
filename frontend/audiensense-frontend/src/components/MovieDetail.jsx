@@ -68,6 +68,8 @@ export default function MovieDetail() {
   const [successMsg, setSuccessMsg] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [watchlistMsg, setWatchlistMsg] = useState('');
+  const [isSyncing, setIsSyncing] = useState(false);
+  const [syncMsg, setSyncMsg] = useState('');
   const reviewsSectionRef = useRef(null);
 
   const token = localStorage.getItem('token');
@@ -194,6 +196,23 @@ export default function MovieDetail() {
       });
   };
 
+  const handleSyncImdb = () => {
+    setIsSyncing(true);
+    setSyncMsg('');
+    api.post(`/movies/sync-imdb/${id}`)
+      .then((res) => {
+        setMovie(res.data);
+        setSyncMsg('✓ Updated with official IMDb poster and metadata!');
+        setTimeout(() => setSyncMsg(''), 4500);
+      })
+      .catch((err) => {
+        const msg = err.response?.data?.error || err.response?.data?.message || 'Sync failed. Set IMDB_API_KEY in backend.';
+        setSyncMsg(msg);
+        setTimeout(() => setSyncMsg(''), 5500);
+      })
+      .finally(() => setIsSyncing(false));
+  };
+
   if (!movie) {
     return (
       <main className="flex min-h-[calc(100vh-73px)] items-center justify-center px-4">
@@ -300,9 +319,38 @@ export default function MovieDetail() {
                   <span>★ Write Review ({liveCount})</span>
                 </button>
 
+                <button
+                  onClick={handleSyncImdb}
+                  disabled={isSyncing}
+                  className="flex items-center gap-2 rounded-xl border border-amber-400/30 bg-amber-500/10 px-5 py-3 font-semibold text-amber-300 backdrop-blur-md transition hover:bg-amber-500/20 hover:border-amber-400/50 active:scale-95 disabled:opacity-60"
+                  title="Automatically fetch official IMDb poster, rating, and cast"
+                >
+                  {isSyncing ? (
+                    <>
+                      <span className="inline-block h-4 w-4 animate-spin rounded-full border-2 border-amber-400 border-t-transparent"></span>
+                      <span>Syncing IMDb...</span>
+                    </>
+                  ) : (
+                    <>
+                      <span>🔄</span>
+                      <span>Sync IMDb</span>
+                    </>
+                  )}
+                </button>
+
                 {watchlistMsg && (
                   <span className="text-xs font-bold text-emerald-400 bg-emerald-500/10 border border-emerald-500/20 px-3 py-2 rounded-xl">
                     ✓ {watchlistMsg}
+                  </span>
+                )}
+
+                {syncMsg && (
+                  <span className={`text-xs font-bold px-3 py-2 rounded-xl border ${
+                    syncMsg.startsWith('✓') 
+                      ? 'text-emerald-300 bg-emerald-500/10 border-emerald-500/30' 
+                      : 'text-amber-300 bg-amber-500/10 border-amber-500/30'
+                  }`}>
+                    {syncMsg}
                   </span>
                 )}
               </div>

@@ -29,9 +29,11 @@ import java.util.List;
 public class MovieController {
 
     private final MovieService movieService;
+    private final com.audiensense.service.ImdbSyncService imdbSyncService;
 
-    public MovieController(MovieService movieService) {
+    public MovieController(MovieService movieService, com.audiensense.service.ImdbSyncService imdbSyncService) {
         this.movieService = movieService;
+        this.imdbSyncService = imdbSyncService;
     }
 
     @GetMapping
@@ -59,6 +61,36 @@ public class MovieController {
     @GetMapping("/new-releases")
     public List<MovieResponse> getNewReleases(@RequestParam(defaultValue = "8") int size) {
         return movieService.getNewReleases(size);
+    }
+
+    @GetMapping("/imdb-status")
+    public ResponseEntity<?> getImdbStatus() {
+        return ResponseEntity.ok(java.util.Map.of(
+                "configured", imdbSyncService.isApiKeyConfigured(),
+                "message", imdbSyncService.isApiKeyConfigured()
+                        ? "IMDb API key is active"
+                        : "IMDb API key is not configured. Add IMDB_API_KEY in .env or Render dashboard."
+        ));
+    }
+
+    @GetMapping("/imdb-preview")
+    public ResponseEntity<?> getImdbPreview(@RequestParam String title) {
+        return ResponseEntity.ok(imdbSyncService.fetchMovieMetadata(title));
+    }
+
+    @PostMapping("/sync-imdb/{id}")
+    public ResponseEntity<?> syncMovieImdb(@PathVariable Long id) {
+        try {
+            var updated = imdbSyncService.syncMovieById(id);
+            return ResponseEntity.ok(movieService.getMovie(updated.getId()));
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body(java.util.Map.of("error", e.getMessage()));
+        }
+    }
+
+    @PostMapping("/sync-imdb-all")
+    public ResponseEntity<?> syncAllMoviesImdb() {
+        return ResponseEntity.ok(imdbSyncService.syncAllMovies());
     }
 
     @GetMapping("/{id}")

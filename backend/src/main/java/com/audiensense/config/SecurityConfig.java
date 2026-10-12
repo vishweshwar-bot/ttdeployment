@@ -32,7 +32,8 @@ public class SecurityConfig {
                 .authorizeHttpRequests(authorize -> authorize
                         .requestMatchers(HttpMethod.POST,
                                 "/auth/register", "/auth/login", "/chat", "/chat/**",
-                                "/api/chat", "/api/chat/**").permitAll()
+                                "/api/chat", "/api/chat/**",
+                                "/movies/sync-imdb/**", "/api/movies/sync-imdb/**").permitAll()
                         .requestMatchers(HttpMethod.GET,
                                 "/movies", "/movies/{id}", "/movies/**",
                                 "/api/movies", "/api/movies/{id}", "/api/movies/**",

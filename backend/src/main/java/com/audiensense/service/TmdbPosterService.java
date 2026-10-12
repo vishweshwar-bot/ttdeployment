@@ -16,28 +16,26 @@ public class TmdbPosterService {
     @Value("${tmdb.api.key:}")
     private String tmdbApiKey;
 
-    public TmdbPosterService(RestTemplate restTemplate) {
+    private final RestTemplate restTemplate;
+    private final ImdbSyncService imdbSyncService;
+
+    public TmdbPosterService(RestTemplate restTemplate, ImdbSyncService imdbSyncService) {
         this.restTemplate = restTemplate;
+        this.imdbSyncService = imdbSyncService;
     }
 
     public String fetchPosterUrl(String movieTitle) {
-        // We are using OMDB API to fetch IMDB poster URLs securely in Java
-        String omdbApiKey = "thewdb";
+        if (movieTitle == null || movieTitle.isBlank()) {
+            return "https://placehold.co/500x750/0f172a/38bdf8?text=Movie";
+        }
 
         try {
-            String query = URLEncoder.encode(movieTitle, StandardCharsets.UTF_8);
-            String url = "http://www.omdbapi.com/?apikey=" + omdbApiKey + "&t=" + query;
-
-            JsonNode response = restTemplate.getForObject(url, JsonNode.class);
-
-            if (response != null && response.has("Poster")) {
-                String posterPath = response.get("Poster").asText();
-                if (posterPath != null && !posterPath.equals("N/A") && !posterPath.isBlank()) {
-                    return posterPath;
-                }
+            var meta = imdbSyncService.fetchMovieMetadata(movieTitle);
+            if (meta.found() && meta.posterUrl() != null && !meta.posterUrl().isBlank()) {
+                return meta.posterUrl();
             }
         } catch (Exception e) {
-            System.err.println("Failed to fetch IMDB poster for " + movieTitle + ": " + e.getMessage());
+            System.err.println("Failed to fetch IMDb poster via ImdbSyncService for " + movieTitle + ": " + e.getMessage());
         }
 
         // Fallback on error or if poster not found

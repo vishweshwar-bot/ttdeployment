@@ -22,8 +22,29 @@ public class DataInitializer {
     @Bean(name = "dataInitializerRunner")
     public CommandLineRunner dataInitializer(MovieRepository movieRepository, TvShowRepository tvShowRepository, ReviewRepository reviewRepository, WatchlistRepository watchlistRepository, JdbcTemplate jdbcTemplate, TmdbPosterService tmdbPosterService) {
         return args -> {
-            // If data is already seeded, skip completely for instant startup
+            // If data is already seeded, launch asynchronous background updater for placeholder posters
             if (movieRepository.count() > 0 && tvShowRepository.count() > 0) {
+                Thread bgPosterUpdater = new Thread(() -> {
+                    try {
+                        Thread.sleep(10000); // Wait 10s after startup
+                        List<Movie> movies = movieRepository.findAll();
+                        for (Movie m : movies) {
+                            if (m.getPosterUrl() == null || m.getPosterUrl().contains("placehold.co") || m.getPosterUrl().isBlank()) {
+                                String realPoster = tmdbPosterService.fetchPosterUrl(m.getTitle());
+                                if (realPoster != null && !realPoster.contains("placehold.co")) {
+                                    m.setPosterUrl(realPoster);
+                                    movieRepository.save(m);
+                                }
+                                Thread.sleep(250);
+                            }
+                        }
+                    } catch (Exception e) {
+                        System.err.println("Background IMDb poster update error: " + e.getMessage());
+                    }
+                });
+                bgPosterUpdater.setDaemon(true);
+                bgPosterUpdater.setName("imdb-background-updater");
+                bgPosterUpdater.start();
                 return;
             }
 

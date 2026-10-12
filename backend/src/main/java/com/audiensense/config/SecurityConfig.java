@@ -37,7 +37,8 @@ public class SecurityConfig {
                                 "/movies", "/movies/{id}", "/movies/**",
                                 "/api/movies", "/api/movies/{id}", "/api/movies/**",
                                 "/tv-shows", "/tv-shows/{id}", "/tv-shows/**",
-                                "/api/tv-shows", "/api/tv-shows/{id}", "/api/tv-shows/**")
+                                "/api/tv-shows", "/api/tv-shows/{id}", "/api/tv-shows/**",
+                                "/reviews/movie/**", "/api/reviews/movie/**")
                                 .permitAll()
                         .requestMatchers(HttpMethod.GET, "/watchlist", "/watchlist/**").authenticated()
                         .requestMatchers(HttpMethod.POST, "/movies").hasRole("SYSTEM_ADMIN")

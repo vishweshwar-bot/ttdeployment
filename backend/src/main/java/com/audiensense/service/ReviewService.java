@@ -58,11 +58,12 @@ public class ReviewService {
         User user = userRepository.findByUsername(username)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.UNAUTHORIZED, "User not found"));
 
+        String commentText = (request.comment() != null) ? request.comment().trim() : "";
         Review review = new Review(
                 movie,
                 user,
                 request.rating(),
-                request.comment().trim());
+                commentText);
         reviewRepository.save(review);
         return toResponse(review);
     }

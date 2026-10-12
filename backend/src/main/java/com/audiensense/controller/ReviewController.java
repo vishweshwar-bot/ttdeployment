@@ -74,7 +74,8 @@ public class ReviewController {
                 return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
             }
 
-            Review review = new Review(movie, user, request.rating(), request.comment().trim());
+            String commentText = (request.comment() != null) ? request.comment().trim() : "";
+            Review review = new Review(movie, user, request.rating(), commentText);
             reviewRepository.save(review);
 
             ReviewResponse response = new ReviewResponse(

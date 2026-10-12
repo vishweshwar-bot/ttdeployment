@@ -11,8 +11,6 @@ import java.nio.charset.StandardCharsets;
 @Service
 public class TmdbPosterService {
 
-    private final RestTemplate restTemplate;
-
     @Value("${tmdb.api.key:}")
     private String tmdbApiKey;
 

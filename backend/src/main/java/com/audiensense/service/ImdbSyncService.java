@@ -59,8 +59,10 @@ public class ImdbSyncService {
         }
 
         try {
-            String query = URLEncoder.encode(title.trim(), StandardCharsets.UTF_8);
-            String url = apiUrl + "?apikey=" + apiKey.trim() + "&t=" + query + "&plot=full";
+            String trimmed = title.trim();
+            String param = trimmed.matches("^tt\\d+$") ? "i" : "t";
+            String query = URLEncoder.encode(trimmed, StandardCharsets.UTF_8);
+            String url = apiUrl + "?apikey=" + apiKey.trim() + "&" + param + "=" + query + "&plot=full";
 
             JsonNode response = restTemplate.getForObject(url, JsonNode.class);
 
@@ -265,5 +267,111 @@ public class ImdbSyncService {
         result.put("failed", failedCount);
         result.put("message", "Synchronized " + updatedCount + " of " + allMovies.size() + " movies with official IMDb data.");
         return result;
+    }
+
+    /**
+     * Searches IMDb global catalog for movies matching the query.
+     */
+    public List<Map<String, Object>> searchImdb(String query) {
+        if (!isApiKeyConfigured() || query == null || query.isBlank()) {
+            return List.of();
+        }
+
+        try {
+            String encoded = URLEncoder.encode(query.trim(), StandardCharsets.UTF_8);
+            String url = apiUrl + "?apikey=" + apiKey.trim() + "&s=" + encoded + "&type=movie";
+
+            JsonNode response = restTemplate.getForObject(url, JsonNode.class);
+            if (response == null || !"True".equalsIgnoreCase(response.path("Response").asText())) {
+                return List.of();
+            }
+
+            JsonNode searchResults = response.path("Search");
+            List<Map<String, Object>> list = new java.util.ArrayList<>();
+            if (searchResults.isArray()) {
+                for (JsonNode item : searchResults) {
+                    String imdbId = item.path("imdbID").asText("");
+                    String title = item.path("Title").asText("");
+                    String year = item.path("Year").asText("");
+                    String poster = item.path("Poster").asText("");
+                    if ("N/A".equalsIgnoreCase(poster) || !poster.startsWith("http")) {
+                        poster = null;
+                    }
+
+                    var existing = movieRepository.findByTitleIgnoreCase(title);
+                    Map<String, Object> map = new HashMap<>();
+                    map.put("imdbId", imdbId);
+                    map.put("title", title);
+                    map.put("year", year);
+                    map.put("poster", poster);
+                    map.put("alreadyImported", existing.isPresent());
+                    map.put("localMovieId", existing.map(Movie::getId).orElse(null));
+                    list.add(map);
+                }
+            }
+            return list;
+        } catch (Exception e) {
+            log.error("Error searching IMDb for '{}': {}", query, e.getMessage());
+            return List.of();
+        }
+    }
+
+    /**
+     * Searches IMDb by title or IMDb ID and automatically imports and saves the movie to the database.
+     */
+    @Transactional
+    public Movie importMovieByTitle(String titleOrId) {
+        if (titleOrId == null || titleOrId.isBlank()) {
+            throw new IllegalArgumentException("Movie title or IMDb ID cannot be empty");
+        }
+
+        String queryParam = titleOrId.trim();
+
+        // Check if movie already exists in database (if queried by title)
+        if (!queryParam.matches("^tt\\d+$")) {
+            var existing = movieRepository.findByTitleIgnoreCase(queryParam);
+            if (existing.isPresent()) {
+                return existing.get();
+            }
+        }
+
+        ImdbMetadataDto meta = fetchMovieMetadata(queryParam);
+        if (!meta.found()) {
+            throw new IllegalArgumentException("Movie '" + queryParam + "' was not found on IMDb.");
+        }
+
+        // Check if the official title from IMDb already exists
+        var existingOfficial = movieRepository.findByTitleIgnoreCase(meta.title().trim());
+        if (existingOfficial.isPresent()) {
+            return existingOfficial.get();
+        }
+
+        String[] platforms = {"Netflix", "Amazon Prime", "Disney+ Hotstar", "Apple TV+", "HBO Max"};
+        String ott = platforms[new java.util.Random().nextInt(platforms.length)];
+
+        String verdict = "Hit";
+        if (meta.imdbRating() != null) {
+            if (meta.imdbRating() >= 8.0) verdict = "Blockbuster";
+            else if (meta.imdbRating() >= 7.0) verdict = "Hit";
+            else if (meta.imdbRating() >= 6.0) verdict = "Average";
+            else verdict = "Flop";
+        }
+
+        Movie movie = new Movie(
+                meta.title().trim(),
+                meta.genre() != null && !meta.genre().isBlank() ? meta.genre() : "Drama",
+                meta.releaseDate() != null ? meta.releaseDate() : LocalDate.of(2023, 1, 1),
+                meta.boxOffice() != null && !meta.boxOffice().isBlank() ? meta.boxOffice() : "TBA",
+                meta.posterUrl() != null && !meta.posterUrl().isBlank() ? meta.posterUrl() : "https://placehold.co/500x750/0f172a/38bdf8?text=" + meta.title(),
+                meta.imdbRating() != null ? meta.imdbRating() : 7.0,
+                meta.description() != null && !meta.description().isBlank() ? meta.description() : "Official IMDb synopsis.",
+                meta.leadActors() != null && !meta.leadActors().isBlank() ? meta.leadActors() : "Lead Ensemble",
+                meta.director() != null && !meta.director().isBlank() ? meta.director() : "Director",
+                verdict,
+                null,
+                ott
+        );
+
+        return movieRepository.save(movie);
     }
 }

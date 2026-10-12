@@ -78,6 +78,11 @@ public class MovieController {
         return ResponseEntity.ok(imdbSyncService.fetchMovieMetadata(title));
     }
 
+    @GetMapping("/imdb-search")
+    public ResponseEntity<?> searchImdb(@RequestParam String query) {
+        return ResponseEntity.ok(imdbSyncService.searchImdb(query));
+    }
+
     @PostMapping("/sync-imdb/{id}")
     public ResponseEntity<?> syncMovieImdb(@PathVariable Long id) {
         try {
@@ -91,6 +96,16 @@ public class MovieController {
     @PostMapping("/sync-imdb-all")
     public ResponseEntity<?> syncAllMoviesImdb() {
         return ResponseEntity.ok(imdbSyncService.syncAllMovies());
+    }
+
+    @PostMapping("/import-imdb")
+    public ResponseEntity<?> importMovieFromImdb(@RequestParam String title) {
+        try {
+            var imported = imdbSyncService.importMovieByTitle(title);
+            return ResponseEntity.ok(movieService.getMovie(imported.getId()));
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body(java.util.Map.of("error", e.getMessage()));
+        }
     }
 
     @GetMapping("/{id}")

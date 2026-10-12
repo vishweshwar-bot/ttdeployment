@@ -15,6 +15,8 @@ public interface MovieRepository extends JpaRepository<Movie, Long> {
 
     boolean existsByTitle(String title);
 
+    Optional<Movie> findByTitleIgnoreCase(String title);
+
     Page<Movie> findByTitleContainingIgnoreCaseOrGenreContainingIgnoreCase(
             String title, String genre, Pageable pageable);
 

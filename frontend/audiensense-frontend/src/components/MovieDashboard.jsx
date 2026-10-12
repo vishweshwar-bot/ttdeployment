@@ -91,8 +91,9 @@ function MovieCard({ movie, onSelect }) {
                 👥 {audienceRating}
               </span>
             )}
-            <span className="flex items-center gap-1 text-amber-400 font-bold bg-amber-500/10 px-2 py-0.5 rounded-md border border-amber-500/20">
-              ⭐ {imdbRating || '0.0'}
+            <span className="flex items-center gap-1.5 text-amber-300 font-black bg-amber-500/15 px-2 py-0.5 rounded-md border border-amber-500/30 shadow-sm shadow-amber-500/10">
+              <span className="text-[9px] font-black tracking-wider uppercase bg-amber-400 text-slate-950 px-1 py-0.2 rounded font-mono">IMDb</span>
+              <span>⭐ {imdbRating || '0.0'}</span>
             </span>
           </div>
         </div>
@@ -234,9 +235,73 @@ export default function MovieDashboard() {
     return movies.slice(0, 8);
   }, [movies]);
   
+  const [imdbQuery, setImdbQuery] = useState('');
+  const [imdbSearchResults, setImdbSearchResults] = useState([]);
+  const [isSearchingImdb, setIsSearchingImdb] = useState(false);
+  const [imdbSearchError, setImdbSearchError] = useState('');
+  const [importingId, setImportingId] = useState(null);
+  const [importToast, setImportToast] = useState('');
+  const [showImdbPanel, setShowImdbPanel] = useState(false);
+
   const resetFilters = () => {
     setSearchTerm('');
     setSelectedGenre('All');
+  };
+
+  const handleSearchImdb = async (queryToSearch) => {
+    const q = (queryToSearch || imdbQuery || searchTerm).trim();
+    if (!q) return;
+    setIsSearchingImdb(true);
+    setImdbSearchError('');
+    setShowImdbPanel(true);
+    try {
+      const res = await api.get(`/movies/imdb-search?query=${encodeURIComponent(q)}`);
+      const results = Array.isArray(res.data) ? res.data : [];
+      setImdbSearchResults(results);
+      if (results.length === 0) {
+        setImdbSearchError(`No movies found on IMDb matching "${q}". Check spelling or try another title.`);
+      }
+    } catch (err) {
+      setImdbSearchError('Unable to connect to IMDb search. Check your backend status.');
+    } finally {
+      setIsSearchingImdb(false);
+    }
+  };
+
+  const handleImportMovie = async (identifier, itemTitle) => {
+    setImportingId(identifier);
+    setImportToast('');
+    try {
+      const res = await api.post(`/movies/import-imdb?title=${encodeURIComponent(identifier)}`);
+      const importedMovie = res.data;
+      
+      // Update local state and cache
+      setMovies(prev => {
+        const exists = prev.some(m => m.id === importedMovie.id);
+        const updated = exists ? prev.map(m => m.id === importedMovie.id ? importedMovie : m) : [importedMovie, ...prev];
+        try {
+          localStorage.setItem('audiensense_movies_cache', JSON.stringify(updated));
+        } catch (e) {}
+        return updated;
+      });
+
+      // Mark as imported in search results
+      setImdbSearchResults(prev => prev.map(item => {
+        if (item.imdbId === identifier || item.title?.toLowerCase() === (itemTitle || '').toLowerCase()) {
+          return { ...item, alreadyImported: true, localMovieId: importedMovie.id };
+        }
+        return item;
+      }));
+
+      setImportToast(`✓ Successfully added "${importedMovie.title}" with official IMDb poster, rating & cast!`);
+      setTimeout(() => setImportToast(''), 6000);
+    } catch (err) {
+      const msg = err.response?.data?.error || err.response?.data?.message || 'Failed to import from IMDb.';
+      setImportToast(`⚠️ ${msg}`);
+      setTimeout(() => setImportToast(''), 6000);
+    } finally {
+      setImportingId(null);
+    }
   };
 
   return (
@@ -255,15 +320,32 @@ export default function MovieDashboard() {
               <p className="text-xs font-bold uppercase tracking-[0.3em] text-blue-400">Search & Explore</p>
               <h2 className="mt-1 text-2xl font-black text-white">Find Movies, Reviews & Ratings</h2>
             </div>
-            <div className="relative w-full lg:max-w-xl">
-              <span className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 text-lg">⌕</span>
-              <input
-                type="search"
-                value={searchTerm}
-                onChange={event => setSearchTerm(event.target.value)}
-                placeholder="Search by title, genre, director or cast..."
-                className="audien-search w-full rounded-xl px-11 py-3.5 text-sm outline-none placeholder:text-slate-500"
-              />
+            <div className="flex w-full flex-col sm:flex-row gap-3 lg:max-w-xl">
+              <div className="relative flex-1">
+                <span className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 text-lg">⌕</span>
+                <input
+                  type="search"
+                  value={searchTerm}
+                  onChange={event => setSearchTerm(event.target.value)}
+                  placeholder="Search by title, genre, director or cast..."
+                  className="audien-search w-full rounded-xl px-11 py-3.5 text-sm outline-none placeholder:text-slate-500"
+                />
+              </div>
+              <button
+                type="button"
+                onClick={() => {
+                  setShowImdbPanel(true);
+                  if (searchTerm && !imdbQuery) {
+                    setImdbQuery(searchTerm);
+                    handleSearchImdb(searchTerm);
+                  }
+                }}
+                className="inline-flex items-center justify-center gap-2 rounded-xl bg-amber-500/15 hover:bg-amber-500/25 border border-amber-500/30 px-4 py-3 text-xs font-black text-amber-300 transition whitespace-nowrap shadow-sm shadow-amber-500/10"
+                title="Search live IMDb database to import official movie poster, ratings and cast"
+              >
+                <span className="text-[10px] font-black uppercase bg-amber-400 text-slate-950 px-1 py-0.2 rounded font-mono">IMDb</span>
+                <span>Import Movie</span>
+              </button>
             </div>
           </div>
 
@@ -281,6 +363,111 @@ export default function MovieDashboard() {
             ))}
           </div>
         </div>
+
+        {/* Import Success / Error Toast */}
+        {importToast && (
+          <div className="fixed top-20 right-6 z-50 max-w-md rounded-2xl border border-amber-500/40 bg-slate-900/95 p-4 text-sm font-bold text-amber-200 shadow-2xl shadow-amber-500/20 backdrop-blur-md animate-fade-in flex items-center justify-between gap-3">
+            <span>{importToast}</span>
+            <button type="button" onClick={() => setImportToast('')} className="text-slate-400 hover:text-white text-lg">×</button>
+          </div>
+        )}
+
+        {/* IMDb Search & Quick Import Modal */}
+        {showImdbPanel && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-md p-4 animate-fade-in">
+            <div className="relative w-full max-w-3xl max-h-[90vh] flex flex-col rounded-3xl border border-slate-700/80 bg-slate-900 p-6 sm:p-8 shadow-2xl shadow-blue-900/40 overflow-hidden">
+              <div className="flex items-start justify-between gap-4 border-b border-white/10 pb-4">
+                <div>
+                  <div className="inline-flex items-center gap-2 rounded-md bg-amber-500/20 px-2 py-0.5 text-xs font-black text-amber-300 border border-amber-500/30 font-mono mb-1">
+                    OFFICIAL IMDb INTEGRATION
+                  </div>
+                  <h3 className="text-2xl font-black text-white">Search & Import Any Movie</h3>
+                  <p className="text-xs text-slate-400 mt-0.5">
+                    Search the global IMDb registry to automatically import official posters, IMDb ratings, and synopsis into AudienSense.
+                  </p>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setShowImdbPanel(false)}
+                  className="rounded-full bg-white/10 p-2 text-slate-400 hover:bg-white/20 hover:text-white transition"
+                >
+                  ✕
+                </button>
+              </div>
+
+              {/* Search Form inside Modal */}
+              <form onSubmit={e => { e.preventDefault(); handleSearchImdb(); }} className="mt-4 flex gap-3">
+                <input
+                  type="text"
+                  value={imdbQuery}
+                  onChange={e => setImdbQuery(e.target.value)}
+                  placeholder="Enter movie title (e.g. 'Interstellar', 'RRR', 'Dune', 'Oppenheimer')..."
+                  className="flex-1 rounded-xl border border-white/10 bg-slate-800/80 px-4 py-3 text-sm text-white outline-none placeholder:text-slate-500 focus:border-amber-400 focus:ring-2 focus:ring-amber-400/20"
+                />
+                <button
+                  type="submit"
+                  disabled={isSearchingImdb || !imdbQuery.trim()}
+                  className="inline-flex items-center gap-2 rounded-xl bg-amber-500 px-5 py-3 text-xs font-black text-slate-950 transition hover:bg-amber-400 disabled:opacity-50"
+                >
+                  {isSearchingImdb ? 'Searching...' : 'Search IMDb'}
+                </button>
+              </form>
+
+              {imdbSearchError && (
+                <div className="mt-4 rounded-xl border border-red-500/30 bg-red-500/10 p-3 text-xs text-red-300">
+                  {imdbSearchError}
+                </div>
+              )}
+
+              {/* Results List */}
+              <div className="mt-5 flex-1 overflow-y-auto space-y-3 pr-1 max-h-[50vh]">
+                {isSearchingImdb && (
+                  <div className="py-12 text-center text-slate-400 text-sm">
+                    <div className="inline-block h-6 w-6 animate-spin rounded-full border-2 border-amber-400 border-t-transparent mb-2"></div>
+                    <p>Connecting to IMDb...</p>
+                  </div>
+                )}
+                {!isSearchingImdb && imdbSearchResults.length > 0 && (
+                  <div className="grid gap-3 sm:grid-cols-2">
+                    {imdbSearchResults.map(item => (
+                      <div key={item.imdbId} className="flex gap-3 rounded-2xl border border-white/10 bg-white/5 p-3 items-center justify-between">
+                        <div className="flex gap-3 items-center min-w-0">
+                          {item.poster ? (
+                            <img src={item.poster} alt={item.title} className="h-16 w-12 rounded-lg object-cover flex-shrink-0" />
+                          ) : (
+                            <div className="h-16 w-12 rounded-lg bg-slate-800 flex items-center justify-center text-slate-600 text-xs flex-shrink-0">
+                              No Pic
+                            </div>
+                          )}
+                          <div className="min-w-0">
+                            <h4 className="font-bold text-sm text-white truncate">{item.title}</h4>
+                            <p className="text-xs text-slate-400">{item.year} • {item.imdbId}</p>
+                          </div>
+                        </div>
+                        <div className="flex-shrink-0">
+                          {item.alreadyImported ? (
+                            <span className="rounded-lg bg-emerald-500/20 px-3 py-1.5 text-xs font-bold text-emerald-300 border border-emerald-500/30">
+                              ✓ Added
+                            </span>
+                          ) : (
+                            <button
+                              type="button"
+                              disabled={importingId === item.imdbId}
+                              onClick={() => handleImportMovie(item.imdbId, item.title)}
+                              className="rounded-lg bg-amber-500 hover:bg-amber-400 px-3 py-1.5 text-xs font-black text-slate-950 transition disabled:opacity-50"
+                            >
+                              {importingId === item.imdbId ? 'Adding...' : '+ Add'}
+                            </button>
+                          )}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+        )}
 
         {/* Carousels for Home View */}
         {!searchTerm && selectedGenre === 'All' && (
@@ -324,7 +511,19 @@ export default function MovieDashboard() {
 
             {filteredMovies.length === 0 ? (
               <div className="audien-empty rounded-2xl p-12 text-center text-slate-400 font-medium">
-                No movies match your search. Try searching for another title or genre.
+                <p className="text-lg text-slate-300 font-bold">No movies found matching "{searchTerm}" in the catalog.</p>
+                <p className="text-xs text-slate-500 mt-1">Would you like to search the global IMDb library and add it to AudienSense?</p>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setImdbQuery(searchTerm);
+                    handleSearchImdb(searchTerm);
+                  }}
+                  className="mt-4 inline-flex items-center gap-2 rounded-xl bg-amber-500 hover:bg-amber-400 px-5 py-2.5 text-xs font-black text-slate-950 transition shadow-lg shadow-amber-500/20"
+                >
+                  <span className="text-[10px] uppercase bg-slate-950 text-amber-400 px-1 py-0.2 rounded font-mono">IMDb</span>
+                  <span>Search IMDb for "{searchTerm}" & Import</span>
+                </button>
               </div>
             ) : (searchTerm || selectedGenre !== 'All') ? (
               <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">

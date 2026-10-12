@@ -33,7 +33,9 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.POST,
                                 "/auth/register", "/auth/login", "/chat", "/chat/**",
                                 "/api/chat", "/api/chat/**",
-                                "/movies/sync-imdb/**", "/api/movies/sync-imdb/**").permitAll()
+                                "/movies/sync-imdb/**", "/api/movies/sync-imdb/**",
+                                "/movies/import-imdb", "/movies/import-imdb/**",
+                                "/api/movies/import-imdb", "/api/movies/import-imdb/**").permitAll()
                         .requestMatchers(HttpMethod.GET,
                                 "/movies", "/movies/{id}", "/movies/**",
                                 "/api/movies", "/api/movies/{id}", "/api/movies/**",

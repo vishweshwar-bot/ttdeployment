@@ -11,8 +11,8 @@ public class GeminiConfig {
     @Bean
     RestTemplate restTemplate() {
         SimpleClientHttpRequestFactory factory = new SimpleClientHttpRequestFactory();
-        factory.setConnectTimeout(3000);
-        factory.setReadTimeout(4000);
+        factory.setConnectTimeout(8000);
+        factory.setReadTimeout(20000);
         return new RestTemplate(factory);
     }
 }

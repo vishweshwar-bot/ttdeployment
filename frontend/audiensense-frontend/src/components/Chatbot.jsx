@@ -72,9 +72,10 @@ export default function Chatbot() {
       speakResponse(reply);
     } catch (error) {
       const backendMessage = error.response?.data?.message;
-      const description = backendMessage && typeof backendMessage === 'string'
-        ? backendMessage
-        : 'I couldn’t reach the recommendation service. Please try again later.';
+      let description = 'I’m having a brief hiccup connecting to the AI brain right now. In the meantime, feel free to explore our top-rated Tollywood and Hollywood collections above!';
+      if (backendMessage && typeof backendMessage === 'string' && !backendMessage.toLowerCase().includes('unable to process') && !backendMessage.toLowerCase().includes('bad gateway')) {
+        description = backendMessage;
+      }
 
       setMessages(current => [...current, {
         id: Date.now() + 1,

@@ -22,32 +22,7 @@ public class DataInitializer {
     @Bean(name = "dataInitializerRunner")
     public CommandLineRunner dataInitializer(MovieRepository movieRepository, TvShowRepository tvShowRepository, ReviewRepository reviewRepository, WatchlistRepository watchlistRepository, JdbcTemplate jdbcTemplate, TmdbPosterService tmdbPosterService) {
         return args -> {
-            // If data is already seeded, launch asynchronous background updater for placeholder posters
-            if (movieRepository.count() > 0 && tvShowRepository.count() > 0) {
-                Thread bgPosterUpdater = new Thread(() -> {
-                    try {
-                        Thread.sleep(10000); // Wait 10s after startup
-                        List<Movie> movies = movieRepository.findAll();
-                        for (Movie m : movies) {
-                            if (m.getPosterUrl() == null || m.getPosterUrl().contains("placehold.co") || m.getPosterUrl().isBlank()) {
-                                String realPoster = tmdbPosterService.fetchPosterUrl(m.getTitle());
-                                if (realPoster != null && !realPoster.contains("placehold.co")) {
-                                    m.setPosterUrl(realPoster);
-                                    movieRepository.save(m);
-                                }
-                                Thread.sleep(250);
-                            }
-                        }
-                    } catch (Exception e) {
-                        System.err.println("Background IMDb poster update error: " + e.getMessage());
-                    }
-                });
-                bgPosterUpdater.setDaemon(true);
-                bgPosterUpdater.setName("imdb-background-updater");
-                bgPosterUpdater.start();
-                return;
-            }
-
+            // 1. Initialize TV Shows if empty
             if (tvShowRepository.count() == 0) {
                 tvShowRepository.saveAll(List.of(
                         new TvShow("Breaking Bad", "Crime/Drama", LocalDate.of(2008, 1, 20), "https://m.media-amazon.com/images/M/MV5BMjhiMzgxZTctNDc1Ni00OTIxLTlhMTYtZTA3ZWFkODRkNmE2XkEyXkFqcGc@._V1_QL75_UX380_CR0,4,380,562_.jpg", "AMC", 5),
@@ -76,6 +51,40 @@ public class DataInitializer {
             }
 
             List<Movie> defaultMovies = new java.util.ArrayList<>();
+            // All-Time Top Rated IMDb Classics
+            defaultMovies.add(createMovie("The Shawshank Redemption", "Drama", LocalDate.of(1994, 10, 14), "$28,767,189", 9.3, "Over the course of several years, two convicts form a friendship, seeking consolation and, eventually, redemption through basic compassion.", "https://m.media-amazon.com/images/M/MV5BMDAyY2FhYjctNDc5OS00MDNlLThiMGUtY2UxYWVkNGY2NDExXkEyXkFqcGc@._V1_SX300.jpg", "Tim Robbins, Morgan Freeman, Bob Gunton", "Frank Darabont", "All Time Classic", null, tmdbPosterService));
+            defaultMovies.add(createMovie("The Godfather", "Crime/Drama", LocalDate.of(1972, 3, 24), "$136,381,073", 9.2, "The aging patriarch of an organized crime dynasty transfers control of his clandestine empire to his reluctant son.", "https://m.media-amazon.com/images/M/MV5BNGEwYjgwOGQtYjg5ZS00Njc1LTk2ZGEtM2Q2MmUzY2ZlZmM4XkEyXkFqcGc@._V1_SX300.jpg", "Marlon Brando, Al Pacino, James Caan", "Francis Ford Coppola", "All Time Classic", null, tmdbPosterService));
+            defaultMovies.add(createMovie("The Dark Knight", "Action/Crime", LocalDate.of(2008, 7, 18), "$534,987,076", 9.0, "When the menace known as the Joker wreaks havoc and chaos on the people of Gotham, Batman must accept one of the greatest psychological and physical tests of his ability to fight injustice.", "https://m.media-amazon.com/images/M/MV5BMTMxNTMwODM0NF5BMl5BanBnXkFtZTcwODAyMTk2Mw@@._V1_SX300.jpg", "Christian Bale, Heath Ledger, Aaron Eckhart", "Christopher Nolan", "All Time Classic", null, tmdbPosterService));
+            defaultMovies.add(createMovie("Pulp Fiction", "Crime/Drama", LocalDate.of(1994, 10, 14), "$107,928,762", 8.9, "The lives of two mob hitmen, a boxer, a gangster and his wife, and a pair of diner bandits intertwine in four tales of violence and redemption.", "https://m.media-amazon.com/images/M/MV5BYTViYTE3NWQtNDBlZS00ZTAyLTkyODMtZGRiZDg0MjA2YThkXkEyXkFqcGc@._V1_SX300.jpg", "John Travolta, Uma Thurman, Samuel L. Jackson", "Quentin Tarantino", "All Time Classic", null, tmdbPosterService));
+            defaultMovies.add(createMovie("Inception", "Action/Sci-Fi", LocalDate.of(2010, 7, 16), "$292,587,330", 8.8, "A thief who steals corporate secrets through the use of dream-sharing technology is given the inverse task of planting an idea into the mind of a C.E.O.", "https://m.media-amazon.com/images/M/MV5BMjAxMzY3NjcxNF5BMl5BanBnXkFtZTcwNTI5OTM0Mw@@._V1_SX300.jpg", "Leonardo DiCaprio, Joseph Gordon-Levitt, Elliot Page", "Christopher Nolan", "All Time Classic", null, tmdbPosterService));
+            defaultMovies.add(createMovie("Fight Club", "Drama", LocalDate.of(1999, 10, 15), "$37,030,102", 8.8, "An insomniac office worker and a devil-may-care soap maker form an underground fight club that evolves into much more.", "https://m.media-amazon.com/images/M/MV5BOTgyOGQ1NDItNGU3Ny00MjU3LTg2YTAtNmFhNGQ1RmM4ZWFhXkEyXkFqcGc@._V1_SX300.jpg", "Brad Pitt, Edward Norton, Meat Loaf", "David Fincher", "Cult Classic", null, tmdbPosterService));
+            defaultMovies.add(createMovie("Forrest Gump", "Drama/Romance", LocalDate.of(1994, 7, 6), "$330,455,270", 8.8, "The history of the United States from the 1950s to the '70s unfolds from the perspective of an Alabama man with an IQ of 75.", "https://m.media-amazon.com/images/M/MV5BNDYwNzVjMTItZmU5YS00YjQ5LTljYjgtSTYyNDg4ZTI4NTkwXkEyXkFqcGc@._V1_SX300.jpg", "Tom Hanks, Robin Wright, Gary Sinise", "Robert Zemeckis", "All Time Classic", null, tmdbPosterService));
+            defaultMovies.add(createMovie("Interstellar", "Adventure/Drama/Sci-Fi", LocalDate.of(2014, 11, 7), "$188,020,017", 8.7, "When Earth becomes uninhabitable in the future, a farmer and ex-NASA pilot, Joseph Cooper, is tasked to pilot a spacecraft along with a team of researchers to find a new planet for humans.", "https://m.media-amazon.com/images/M/MV5BYzdjMDAxZGItMjI2My00ODA1LTlkNzItOWFjMDU5ZDJlYWY3XkEyXkFqcGc@._V1_SX300.jpg", "Matthew McConaughey, Anne Hathaway, Jessica Chastain", "Christopher Nolan", "Blockbuster", null, tmdbPosterService));
+            defaultMovies.add(createMovie("The Matrix", "Action/Sci-Fi", LocalDate.of(1999, 3, 31), "$171,479,930", 8.7, "When a beautiful stranger leads computer hacker Neo to a forbidding underworld, he discovers the shocking truth.", "https://m.media-amazon.com/images/M/MV5BN2NmN2VhMTQtMDNiOS00NDlhLTliMjgtODE2ZTY0ODQyNDRhXkEyXkFqcGc@._V1_SX300.jpg", "Keanu Reeves, Laurence Fishburne, Carrie-Anne Moss", "Lana Wachowski", "All Time Classic", null, tmdbPosterService));
+            defaultMovies.add(createMovie("Gladiator", "Action/Adventure/Drama", LocalDate.of(2000, 5, 5), "$187,705,427", 8.5, "A former Roman General sets out to exact vengeance against the corrupt emperor who murdered his family and sent him into slavery.", "https://m.media-amazon.com/images/M/MV5BYWQ4YmNjYjEtOWE1Zi00Y2U4LWI4NTAtMTU0MjkxNWQ1ZmJiXkEyXkFqcGc@._V1_SX300.jpg", "Russell Crowe, Joaquin Phoenix, Connie Nielsen", "Ridley Scott", "All Time Classic", null, tmdbPosterService));
+            defaultMovies.add(createMovie("Oppenheimer", "Biography/Drama/History", LocalDate.of(2023, 7, 21), "$329,862,540", 8.4, "The story of American scientist J. Robert Oppenheimer and his role in the development of the atomic bomb.", "https://m.media-amazon.com/images/M/MV5BN2JkMDc5MGQtZjg3YS00NmFiLWIyZmQtZTJmNTM5MjVmYTQ4XkEyXkFqcGc@._V1_SX300.jpg", "Cillian Murphy, Emily Blunt, Matt Damon", "Christopher Nolan", "Oscar Winner", null, tmdbPosterService));
+            defaultMovies.add(createMovie("Dune: Part Two", "Action/Adventure/Sci-Fi", LocalDate.of(2024, 3, 1), "$282,144,358", 8.5, "Paul Atreides unites with Chani and the Fremen while seeking revenge against the conspirators who destroyed his family.", "https://m.media-amazon.com/images/M/MV5BNTc0YmQxMjEtODI5MC00NjFiLTlkMWUtOGQ5NjFmYWUyZGJhXkEyXkFqcGc@._V1_SX300.jpg", "Timothée Chalamet, Zendaya, Rebecca Ferguson", "Denis Villeneuve", "Blockbuster", null, tmdbPosterService));
+            defaultMovies.add(createMovie("12 Angry Men", "Crime/Drama", LocalDate.of(1957, 4, 10), "$2,000,000", 9.0, "The jury in a New York City murder trial is frustrated by a single member whose skeptical caution forces them to more carefully consider the evidence before jumping to a hasty verdict.", "https://m.media-amazon.com/images/M/MV5BYjE4NzdmOTcgNDgwNC00YjRiLTg5NTctNWZhM2YwZmZlMmNhXkEyXkFqcGc@._V1_SX300.jpg", "Henry Fonda, Lee J. Cobb, Martin Balsam", "Sidney Lumet", "All Time Classic", null, tmdbPosterService));
+            defaultMovies.add(createMovie("Schindler's List", "Biography/Drama/History", LocalDate.of(1993, 12, 15), "$96,898,818", 9.0, "In German-occupied Poland during World War II, industrialist Oskar Schindler gradually becomes concerned for his Jewish workforce after witnessing their persecution by the Nazis.", "https://m.media-amazon.com/images/M/MV5BNjM1ZDQxYWUtMzQyZS00MTE1LWJmZGYtNGUyNTdlYjM3ZmVmXkEyXkFqcGc@._V1_SX300.jpg", "Liam Neeson, Ralph Fiennes, Ben Kingsley", "Steven Spielberg", "All Time Classic", null, tmdbPosterService));
+            defaultMovies.add(createMovie("Spirited Away", "Animation/Adventure/Family", LocalDate.of(2001, 7, 20), "$15,205,725", 8.6, "During her family's move to the suburbs, a sullen 10-year-old girl wanders into a world ruled by gods, witches, and spirits, a world where humans are changed into beasts.", "https://m.media-amazon.com/images/M/MV5BNTEyNmEwOWUtYzkyOC00ZTQ4LTllZmUtMjk0Y2YwOGUzYDUzXkEyXkFqcGc@._V1_SX300.jpg", "Daveigh Chase, Suzanne Pleshette, Miyu Irino", "Hayao Miyazaki", "Oscar Winner", null, tmdbPosterService));
+            defaultMovies.add(createMovie("Parasite", "Drama/Thriller", LocalDate.of(2019, 10, 11), "$53,369,749", 8.5, "Greed and class discrimination threaten the newly formed symbiotic relationship between the wealthy Park family and the destitute Kim clan.", "https://m.media-amazon.com/images/M/MV5BYjk1N2U4NWQtNzlkNC00NTIzLWF-YjItZWU5LTBlODE4ZTk3XkEyXkFqcGc@._V1_SX300.jpg", "Song Kang-ho, Lee Sun-kyun, Cho Yeo-jeong", "Bong Joon Ho", "Oscar Winner", null, tmdbPosterService));
+            defaultMovies.add(createMovie("Goodfellas", "Biography/Crime/Drama", LocalDate.of(1990, 9, 21), "$46,906,243", 8.7, "The story of Henry Hill and his life in the mafia, covering his relationship with his wife Karen and his mob partners Jimmy Conway and Tommy DeVito.", "https://m.media-amazon.com/images/M/MV5BN2E5NzI2ZGMtY2UxZS00MzBiLTliMGMtOGY3NWYzNmUwNmQxXkEyXkFqcGc@._V1_SX300.jpg", "Robert De Niro, Ray Liotta, Joe Pesci", "Martin Scorsese", "All Time Classic", null, tmdbPosterService));
+            defaultMovies.add(createMovie("Seven", "Crime/Drama/Mystery", LocalDate.of(1995, 9, 22), "$100,125,643", 8.6, "Two detectives, a rookie and a veteran, hunt a serial killer who uses the seven deadly sins as his motives.", "https://m.media-amazon.com/images/M/MV5BYmQ1Yzg3NTUtNDY3MS00OTY1LTlhNzYtYjBmOGNhOTk1YTAwXkEyXkFqcGc@._V1_SX300.jpg", "Morgan Freeman, Brad Pitt, Kevin Spacey", "David Fincher", "Cult Classic", null, tmdbPosterService));
+            defaultMovies.add(createMovie("The Silence of the Lambs", "Crime/Drama/Thriller", LocalDate.of(1991, 2, 14), "$130,742,922", 8.6, "A young F.B.I. cadet must receive the help of an incarcerated and manipulative cannibal killer to help catch another serial killer.", "https://m.media-amazon.com/images/M/MV5BNjNhZTk0ZmEtNjJhMi00YzFlLWE1MmEtYzM1M2ZmMGMwMTU4XkEyXkFqcGc@._V1_SX300.jpg", "Jodie Foster, Anthony Hopkins, Lawrence A. Bonney", "Jonathan Demme", "Oscar Winner", null, tmdbPosterService));
+            defaultMovies.add(createMovie("Saving Private Ryan", "Drama/War", LocalDate.of(1998, 7, 24), "$217,049,603", 8.6, "Following the Normandy Landings, a group of U.S. soldiers go behind enemy lines to retrieve a paratrooper whose brothers have been killed in action.", "https://m.media-amazon.com/images/M/MV5BZjhkMDM4MWItZTVjOC00ZDRhLThmYTAtM2I5NzAzNzcxNjNjXkEyXkFqcGc@._V1_SX300.jpg", "Tom Hanks, Matt Damon, Tom Sizemore", "Steven Spielberg", "Oscar Winner", null, tmdbPosterService));
+            defaultMovies.add(createMovie("The Green Mile", "Crime/Drama/Fantasy", LocalDate.of(1999, 12, 10), "$136,801,374", 8.6, "A tale set on death row in a Southern prison, where gentle giant John Coffey possesses the mysterious power to heal people's ailments and ailments.", "https://m.media-amazon.com/images/M/MV5BMTUxMzQyNjA5MF5BMl5BanBnXkFtZTYwOTU2NTY3._V1_SX300.jpg", "Tom Hanks, Michael Clarke Duncan, David Morse", "Frank Darabont", "All Time Classic", null, tmdbPosterService));
+            defaultMovies.add(createMovie("The Departed", "Crime/Drama/Thriller", LocalDate.of(2006, 10, 6), "$132,384,315", 8.5, "An undercover state trooper and a mole in the state police attempt to identify each other while infiltrating an Irish gang in South Boston.", "https://m.media-amazon.com/images/M/MV5BMTI1MTgzMDY4Ml5BMl5BanBnXkFtZTcwNTI1OTQ0MQ@@._V1_SX300.jpg", "Leonardo DiCaprio, Matt Damon, Jack Nicholson", "Martin Scorsese", "Oscar Winner", null, tmdbPosterService));
+            defaultMovies.add(createMovie("Whiplash", "Drama/Music", LocalDate.of(2014, 10, 15), "$13,092,000", 8.5, "A promising young drummer enrolls at a cut-throat music conservatory where his dreams of greatness are mentored by an instructor who will stop at nothing to realize a student's potential.", "https://m.media-amazon.com/images/M/MV5BOTA5NDZlZGUtMjAxOS00YTRkLTkwYmMtYWQ0NWEwZD阳ZDUwXkEyXkFqcGc@._V1_SX300.jpg", "Miles Teller, J.K. Simmons, Paul Reiser", "Damien Chazelle", "Oscar Winner", null, tmdbPosterService));
+            defaultMovies.add(createMovie("The Prestige", "Drama/Mystery/Sci-Fi", LocalDate.of(2006, 10, 20), "$53,089,891", 8.5, "After a tragic accident, two stage magicians in 1890s London engage in a battle to create the ultimate illusion while sacrificing everything they have to outwit each other.", "https://m.media-amazon.com/images/M/MV5BMjA4NDI0MTIxNF5BMl5BanBnXkFtZTYwNTM0MzY2._V1_SX300.jpg", "Christian Bale, Hugh Jackman, Scarlett Johansson", "Christopher Nolan", "Cult Classic", null, tmdbPosterService));
+            defaultMovies.add(createMovie("Terminator 2: Judgment Day", "Action/Sci-Fi", LocalDate.of(1991, 7, 3), "$205,881,154", 8.6, "A cyborg, identical to the one who failed to kill Sarah Connor, must now protect her ten-year-old son John from an even more advanced and powerful cyborg.", "https://m.media-amazon.com/images/M/MV5BNGMyNWExM2QtZjA2Yi00MWViLWFjODQtOTY0Y2VmNDJhNDYxXkEyXkFqcGc@._V1_SX300.jpg", "Arnold Schwarzenegger, Linda Hamilton, Edward Furlong", "James Cameron", "All Time Classic", null, tmdbPosterService));
+            defaultMovies.add(createMovie("Django Unchained", "Drama/Western", LocalDate.of(2012, 12, 25), "$162,805,434", 8.5, "With the help of a German bounty-hunter, a freed slave sets out to rescue his wife from a brutal Mississippi plantation owner.", "https://m.media-amazon.com/images/M/MV5BMjIyNTQ5NjQ1OV5BMl5BanBnXkFtZTcwODg1MDU4OA@@._V1_SX300.jpg", "Jamie Foxx, Christoph Waltz, Leonardo DiCaprio", "Quentin Tarantino", "Oscar Winner", null, tmdbPosterService));
+            defaultMovies.add(createMovie("Avatar", "Action/Adventure/Fantasy", LocalDate.of(2009, 12, 18), "$785,221,649", 7.9, "A paraplegic Marine dispatched to the moon Pandora on a unique mission becomes torn between following his orders and protecting the world he feels is his home.", "https://m.media-amazon.com/images/M/MV5BMDEzMmQwZjctZWU2My00MWNlLWE0NGItMDBlNmP0Mzk4ZTkwXkEyXkFqcGc@._V1_SX300.jpg", "Sam Worthington, Zoe Saldaña, Sigourney Weaver", "James Cameron", "All-Time Blockbuster", null, tmdbPosterService));
+            defaultMovies.add(createMovie("Pushpa: The Rise", "Action/Crime/Drama", LocalDate.of(2021, 12, 17), "Rs. 365 Cr", 7.6, "A laborer rises through the ranks of a red sander smuggling syndicate, making some powerful enemies along the way.", "https://m.media-amazon.com/images/M/MV5BMmQ4YmM3NjgtNTExNC00ZTZhLWEwZTctYjdhOWFiODlhNzYzXkEyXkFqcGc@._V1_SX300.jpg", "Allu Arjun, Rashmika Mandanna, Fahadh Faasil", "Sukumar", "Industry Hit", null, tmdbPosterService));
+            defaultMovies.add(createMovie("Devara: Part 1", "Action/Drama", LocalDate.of(2024, 9, 27), "Rs. 500 Cr", 6.8, "An epic action saga set against the coastal lands, exploring fear, courage and an oath to protect one's people.", "https://m.media-amazon.com/images/M/MV5BYzA2N2E1YTYtMTAyZi00MmRhLTk3YjgtZDkwZWRlODBiM2RhXkEyXkFqcGc@._V1_SX300.jpg", "NTR Jr, Janhvi Kapoor, Saif Ali Khan", "Koratala Siva", "Blockbuster", null, tmdbPosterService));
+            defaultMovies.add(createMovie("Stree 2", "Comedy/Horror", LocalDate.of(2024, 8, 15), "Rs. 875 Cr", 7.4, "After the events of Stree, the town of Chanderi is being haunted again. This time women are mysteriously abducted by a headless entity named Sarkata.", "https://m.media-amazon.com/images/M/MV5BMzc2ZTQ0NGQtYTdmNC00NzM4LWIwNWItMjViNGY2ZjEzODNlXkEyXkFqcGc@._V1_SX300.jpg", "Shraddha Kapoor, Rajkummar Rao, Pankaj Tripathi", "Amar Kaushik", "All-Time Blockbuster", null, tmdbPosterService));
+            defaultMovies.add(createMovie("Animal", "Action/Crime/Drama", LocalDate.of(2023, 12, 1), "Rs. 917 Cr", 6.2, "A son's obsessive love for his father leads him on a ruthless and violent path of bloodshed.", "https://m.media-amazon.com/images/M/MV5BNGViM2M4NmUtMmNkNy00MTU5LTk5MTYtMmI3MzZlODU1NjZmXkEyXkFqcGc@._V1_SX300.jpg", "Ranbir Kapoor, Anil Kapoor, Bobby Deol, Rashmika Mandanna", "Sandeep Reddy Vanga", "All-Time Blockbuster", null, tmdbPosterService));
+            defaultMovies.add(createMovie("Kalki 2898 AD", "Action/Sci-Fi", LocalDate.of(2024, 6, 27), "Rs. 1,100 Cr", 7.6, "A modern avatar of Vishnu descends to Earth to protect the world from evil forces in a dystopian future.", "https://m.media-amazon.com/images/M/MV5BNmU5YzAxNzAtMjBiMS00ZTM3LTg0YTMtNzU4MmI3YTk2MjQ2XkEyXkFqcGc@._V1_SX300.jpg", "Prabhas, Amitabh Bachchan, Kamal Haasan, Deepika Padukone", "Nag Ashwin", "Industry Hit", null, tmdbPosterService));
+            defaultMovies.add(createMovie("K.G.F: Chapter 2", "Action/Crime", LocalDate.of(2022, 4, 14), "Rs. 1,250 Cr", 8.2, "In the blood-soaked Kolar Gold Fields, Rocky's name strikes fear into his foes.", "https://m.media-amazon.com/images/M/MV5BMjA2MzUwMDYzOV5BMl5BanBnXkFtZTgwMjIzNjU1MDI@._V1_SX300.jpg", "Yash, Sanjay Dutt, Raveena Tandon", "Prashanth Neel", "Industry Hit", null, tmdbPosterService));
             defaultMovies.add(createMovie("Baahubali 2: The Conclusion", "Action/Epic", LocalDate.of(2017, 4, 28), "Rs. 1,788 Cr", 8.2, "Amarendra Baahubali's son rises to reclaim his kingdom.", "https://m.media-amazon.com/images/M/MV5BNTRhYTlhZTgtYmMyYy00NWI4LTk4MzItOWM2YjBmYTg2OTI2XkEyXkFqcGc@._V1_QL75_UY562_CR9,0,380,562_.jpg", "Prabhas, Rana Daggubati, Anushka Shetty", "S. S. Rajamouli", "Industry Hit", null, tmdbPosterService));
             defaultMovies.add(createMovie("Salaar: Part 1 – Ceasefire", "Action/Thriller", LocalDate.of(2023, 12, 22), "Rs. 700 Cr", 6.5, "Two friends become involved in a violent power struggle.", "https://placehold.co/500x750/0f172a/38bdf8?text=Salaar", "Prabhas, Prithviraj Sukumaran", "Prashanth Neel", "Hit", null, tmdbPosterService));
             defaultMovies.add(createMovie("Hanuman", "Fantasy/Superhero", LocalDate.of(2024, 1, 12), "Rs. 350 Cr", 7.8, "A young man discovers extraordinary powers and protects his village.", "https://m.media-amazon.com/images/M/MV5BNzVhNjQ3YzgtMDNjYi00Nzc1LWFlMGYtNGQxMTczNmQ3ZDMxXkEyXkFqcGc@._V1_QL75_UY562_CR5,0,380,562_.jpg", "Teja Sajja, Amritha Aiyer", "Prasanth Varma", "Blockbuster", null, tmdbPosterService));
@@ -232,29 +241,43 @@ public class DataInitializer {
             defaultMovies.add(createMovie("Guardians of the Galaxy Vol. 3", "Action/Superhero", LocalDate.of(2023, 5, 5), "$358,995,815", 7.9, "Still reeling from the loss of Gamora, Peter Quill rallies his team to defend the universe and one of their own - a mission that could mean the end of the Guardians if not successful.", "https://m.media-amazon.com/images/M/MV5BOTJhOTMxMmItZmE0Ny00MDc3LWEzOGEtOGFkMzY4MWYyZDQ0XkEyXkFqcGc@._V1_QL75_UX380_CR0,0,380,562_.jpg", "Chris Pratt, Chukwudi Iwuji, Bradley Cooper", "James Gunn", "Hit", null, tmdbPosterService));
             defaultMovies.add(createMovie("The Marvels", "Action/Superhero", LocalDate.of(2023, 11, 10), "$84,500,223", 5.4, "Carol Danvers gets her powers entangled with those of Kamala Khan and Monica Rambeau, forcing them to work together to save the universe.", "https://m.media-amazon.com/images/M/MV5BYzczOWM4MzItMWMyOS00ZDczLWIxMzctNzBmYTgzOTI1MzI3XkEyXkFqcGc@._V1_QL75_UX380_CR0,0,380,562_.jpg", "Brie Larson, Teyonah Parris, Iman Vellani", "Nia DaCosta", "Hit", null, tmdbPosterService));
             
-            List<Movie> moviesToSave = new java.util.ArrayList<>();
-            for (Movie defaultMovie : defaultMovies) {
-                if (!movieRepository.existsByTitle(defaultMovie.getTitle())) {
-                    moviesToSave.add(defaultMovie);
-                }
-            }
-            if (!moviesToSave.isEmpty()) {
-                movieRepository.saveAll(moviesToSave);
-            }
+            // Asynchronously ensure all movies are saved and posters updated without blocking port binding!
+            Thread bgSeeder = new Thread(() -> {
+                try {
+                    Thread.sleep(5000);
+                    List<Movie> moviesToSave = new java.util.ArrayList<>();
+                    for (Movie defaultMovie : defaultMovies) {
+                        try {
+                            if (!movieRepository.existsByTitle(defaultMovie.getTitle())) {
+                                moviesToSave.add(defaultMovie);
+                            }
+                        } catch (Exception ignored) {}
+                    }
+                    if (!moviesToSave.isEmpty()) {
+                        movieRepository.saveAll(moviesToSave);
+                    }
 
-            // Assign random OTT platforms to existing movies if null
-            String[] platforms = {"Netflix", "Amazon Prime", "Disney+ Hotstar", "Aha", "Zee5"};
-            List<Movie> existingMovies = movieRepository.findAll();
-            boolean updatedMovies = false;
-            for (Movie m : existingMovies) {
-                if (m.getOttPlatform() == null) {
-                    m.setOttPlatform(platforms[new java.util.Random().nextInt(platforms.length)]);
-                    updatedMovies = true;
+                    // Replace placeholder posters with real IMDb Amazon CDN posters
+                    List<Movie> all = movieRepository.findAll();
+                    for (Movie m : all) {
+                        try {
+                            if (m.getPosterUrl() == null || m.getPosterUrl().contains("placehold.co") || m.getPosterUrl().isBlank()) {
+                                String realUrl = tmdbPosterService.fetchPosterUrl(m.getTitle());
+                                if (realUrl != null && !realUrl.contains("placehold.co")) {
+                                    m.setPosterUrl(realUrl);
+                                    movieRepository.save(m);
+                                }
+                                Thread.sleep(100);
+                            }
+                        } catch (Exception ignored) {}
+                    }
+                } catch (Exception e) {
+                    System.err.println("IMDb seeder background notice: " + e.getMessage());
                 }
-            }
-            if (updatedMovies) {
-                movieRepository.saveAll(existingMovies);
-            }
+            });
+            bgSeeder.setDaemon(true);
+            bgSeeder.setName("imdb-background-seeder");
+            bgSeeder.start();
         };
     }
 

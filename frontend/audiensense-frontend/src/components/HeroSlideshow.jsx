@@ -79,7 +79,7 @@ export default function HeroSlideshow({ movies = [] }) {
 
   return (
     <section 
-      className="relative mb-14 overflow-hidden rounded-3xl border border-white/10 bg-slate-950 shadow-2xl shadow-blue-950/30"
+      className="relative mb-14 overflow-hidden rounded-3xl border border-white/15 bg-slate-950/85 backdrop-blur-xl shadow-2xl shadow-blue-950/40"
       onMouseEnter={() => setIsPaused(true)}
       onMouseLeave={() => setIsPaused(false)}
     >

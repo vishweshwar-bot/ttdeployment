@@ -209,13 +209,13 @@ export default function MovieDetail() {
     <main className="min-h-screen pb-20">
       
       {/* Cinematic Backdrop Hero Section */}
-      <section className="relative overflow-hidden border-b border-white/10 bg-slate-950">
+      <section className="relative overflow-hidden border-b border-white/10 bg-slate-950/70 backdrop-blur-md">
         {/* Ambient Movie Blur */}
         <div 
-          className="absolute inset-0 bg-cover bg-center opacity-20 blur-3xl scale-125"
+          className="absolute inset-0 bg-cover bg-center opacity-25 blur-3xl scale-125"
           style={{ backgroundImage: `url(${movie.posterUrl})` }}
         />
-        <div className="absolute inset-0 bg-gradient-to-t from-slate-950 via-slate-950/80 to-slate-950/40" />
+        <div className="absolute inset-0 bg-gradient-to-t from-[#06080e] via-[#06080e]/80 to-transparent" />
 
         <div className="relative mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
           <button 

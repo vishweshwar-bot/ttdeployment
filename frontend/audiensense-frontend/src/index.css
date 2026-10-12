@@ -3,7 +3,7 @@
 :root {
   font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
   color: #f1f5f9;
-  background: #090d16;
+  background: #070a12;
   font-synthesis: none;
   text-rendering: optimizeLegibility;
 }
@@ -22,12 +22,8 @@ body {
   min-width: 320px;
   min-height: 100vh;
   color: #f1f5f9;
-  background:
-    radial-gradient(circle at 50% 0%, rgba(37, 99, 235, 0.18), transparent 50%),
-    radial-gradient(circle at 90% 20%, rgba(147, 51, 234, 0.12), transparent 40%),
-    radial-gradient(circle at 10% 40%, rgba(6, 182, 212, 0.1), transparent 35%),
-    #090d16;
-  background-attachment: fixed;
+  background: #070a12;
+  overflow-x: hidden;
 }
 
 button,
@@ -52,11 +48,12 @@ button:disabled {
   display: none;
 }
 
-/* Base App Container */
+/* Base App Shell */
 .audien-shell {
   min-height: 100vh;
   background: transparent;
   color: #f1f5f9;
+  position: relative;
 }
 
 /* Navbar */
@@ -65,9 +62,9 @@ button:disabled {
   top: 0;
   z-index: 50;
   border-bottom: 1px solid rgba(255, 255, 255, 0.08);
-  background: rgba(9, 13, 22, 0.88);
-  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5);
-  backdrop-filter: blur(20px);
+  background: rgba(7, 10, 18, 0.75);
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.6);
+  backdrop-filter: blur(24px);
 }
 
 .audien-dashboard {
@@ -77,62 +74,63 @@ button:disabled {
 
 /* Panels & Glassmorphism */
 .audien-panel {
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  background: rgba(15, 23, 42, 0.75);
-  backdrop-filter: blur(18px);
-  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.4);
+  border: 1px solid rgba(255, 255, 255, 0.09);
+  background: rgba(13, 19, 33, 0.78);
+  backdrop-filter: blur(24px);
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5), inset 0 1px 0 rgba(255, 255, 255, 0.08);
 }
 
 .audien-search {
   border: 1px solid rgba(255, 255, 255, 0.12);
-  background: rgba(15, 23, 42, 0.8);
+  background: rgba(11, 16, 28, 0.85);
   color: #f8fafc;
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.3);
-  transition: all 0.2s ease;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.35);
+  transition: all 0.25s ease;
 }
 
 .audien-search:focus {
   border-color: #3b82f6;
   background: rgba(15, 23, 42, 0.95);
-  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.25), 0 0 20px rgba(59, 130, 246, 0.2);
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.25), 0 0 25px rgba(59, 130, 246, 0.3);
 }
 
 /* Genre Pills */
 .audien-genre {
   border: 1px solid rgba(255, 255, 255, 0.1);
-  background: rgba(15, 23, 42, 0.6);
+  background: rgba(15, 23, 42, 0.65);
   color: #94a3b8;
-  backdrop-filter: blur(12px);
-  transition: all 0.2s ease;
+  backdrop-filter: blur(14px);
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 .audien-genre:hover {
   border-color: rgba(96, 165, 250, 0.5);
   color: #ffffff;
-  background: rgba(30, 41, 59, 0.8);
-  transform: translateY(-1px);
+  background: rgba(30, 41, 59, 0.85);
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(37, 99, 235, 0.2);
 }
 
 .audien-genre-active {
   border-color: #3b82f6;
   background: linear-gradient(135deg, #2563eb, #1d4ed8);
   color: #ffffff;
-  box-shadow: 0 0 20px rgba(37, 99, 235, 0.4);
+  box-shadow: 0 0 24px rgba(37, 99, 235, 0.5);
 }
 
 /* Movie Cards */
 .audien-card {
   border: 1px solid rgba(255, 255, 255, 0.08);
-  background: rgba(15, 23, 42, 0.8);
-  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.35);
-  backdrop-filter: blur(14px);
-  transition: transform 260ms cubic-bezier(0.16, 1, 0.3, 1), box-shadow 260ms ease, border-color 260ms ease;
+  background: rgba(13, 19, 33, 0.82);
+  box-shadow: 0 12px 35px rgba(0, 0, 0, 0.4);
+  backdrop-filter: blur(16px);
+  transition: transform 280ms cubic-bezier(0.16, 1, 0.3, 1), box-shadow 280ms ease, border-color 280ms ease;
 }
 
 .audien-card:hover {
-  transform: translateY(-8px) scale(1.02);
-  border-color: rgba(96, 165, 250, 0.6);
-  box-shadow: 0 20px 45px rgba(37, 99, 235, 0.25), 0 0 30px rgba(59, 130, 246, 0.15);
+  transform: translateY(-9px) scale(1.025);
+  border-color: rgba(96, 165, 250, 0.65);
+  box-shadow: 0 24px 50px rgba(0, 0, 0, 0.6), 0 0 35px rgba(37, 99, 235, 0.35);
 }
 
 .audien-card-title {
@@ -164,7 +162,7 @@ button:disabled {
 
 .audien-button {
   border: 1px solid rgba(255, 255, 255, 0.12);
-  background: rgba(255, 255, 255, 0.05);
+  background: rgba(255, 255, 255, 0.06);
   color: #e2e8f0;
   transition: all 180ms ease;
 }
@@ -172,16 +170,290 @@ button:disabled {
 .audien-button:hover {
   border-color: rgba(96, 165, 250, 0.5);
   color: #ffffff;
-  background: rgba(255, 255, 255, 0.1);
+  background: rgba(255, 255, 255, 0.12);
   transform: translateY(-1px);
 }
 
-/* Pulsing Cinematic Spotlight */
-@keyframes pulseGlow {
-  0%, 100% { opacity: 0.15; transform: scale(1); }
-  50% { opacity: 0.25; transform: scale(1.08); }
+/* =========================================
+   CINEMATIC BACKGROUND ANIMATIONS
+   ========================================= */
+
+/* =========================================
+   CINEMATIC BACKGROUND ANIMATIONS & EFFECTS
+   ========================================= */
+
+/* Primary Projector Light Sweep */
+@keyframes projectorSweepPrimary {
+  0%, 100% {
+    opacity: 0.22;
+    transform: translateX(-50%) rotate(-4deg) scaleY(1);
+  }
+  50% {
+    opacity: 0.35;
+    transform: translateX(-50%) rotate(4deg) scaleY(1.08);
+  }
 }
 
-.cinematic-glow {
-  animation: pulseGlow 8s infinite ease-in-out;
+.projector-beam-primary {
+  animation: projectorSweepPrimary 14s infinite ease-in-out;
+  will-change: transform, opacity;
+}
+
+/* Dual Premiere Searchlights */
+@keyframes searchlightSweepLeft {
+  0%, 100% {
+    opacity: 0.16;
+    transform: rotate(-12deg) scaleX(0.9);
+  }
+  50% {
+    opacity: 0.28;
+    transform: rotate(8deg) scaleX(1.15);
+  }
+}
+
+@keyframes searchlightSweepRight {
+  0%, 100% {
+    opacity: 0.16;
+    transform: rotate(12deg) scaleX(0.9);
+  }
+  50% {
+    opacity: 0.28;
+    transform: rotate(-8deg) scaleX(1.15);
+  }
+}
+
+.searchlight-left {
+  animation: searchlightSweepLeft 18s infinite ease-in-out;
+  transform-origin: top left;
+  will-change: transform, opacity;
+}
+
+.searchlight-right {
+  animation: searchlightSweepRight 20s infinite ease-in-out;
+  transform-origin: top right;
+  will-change: transform, opacity;
+}
+
+/* Anamorphic Hollywood Horizontal Lens Flares */
+@keyframes anamorphicSweep1 {
+  0%, 100% {
+    transform: translateX(-8%) scaleY(1);
+    opacity: 0.25;
+  }
+  50% {
+    transform: translateX(8%) scaleY(1.8);
+    opacity: 0.65;
+  }
+}
+
+@keyframes anamorphicSweep2 {
+  0%, 100% {
+    transform: translateX(10%) scaleY(1.5);
+    opacity: 0.2;
+  }
+  50% {
+    transform: translateX(-10%) scaleY(0.9);
+    opacity: 0.55;
+  }
+}
+
+.anamorphic-flare.flare-1 {
+  animation: anamorphicSweep1 16s infinite ease-in-out;
+  will-change: transform, opacity;
+}
+
+.anamorphic-flare.flare-2 {
+  animation: anamorphicSweep2 22s infinite ease-in-out;
+  will-change: transform, opacity;
+}
+
+/* Rotating Cinema Reel / Lens Aperture Rings */
+@keyframes reelRotateClockwise {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@keyframes reelRotateCounter {
+  from {
+    transform: rotate(360deg);
+  }
+  to {
+    transform: rotate(0deg);
+  }
+}
+
+.film-reel-ring.reel-left {
+  animation: reelRotateClockwise 85s infinite linear;
+  will-change: transform;
+}
+
+.film-reel-ring.reel-right {
+  animation: reelRotateCounter 110s infinite linear;
+  will-change: transform;
+}
+
+/* Floating Nebula Orbs Keyframes */
+@keyframes orbFloat1 {
+  0%, 100% {
+    transform: translate3d(0, 0, 0) scale(1);
+  }
+  33% {
+    transform: translate3d(55px, 70px, 0) scale(1.12);
+  }
+  66% {
+    transform: translate3d(-40px, 45px, 0) scale(0.94);
+  }
+}
+
+@keyframes orbFloat2 {
+  0%, 100% {
+    transform: translate3d(0, 0, 0) scale(1);
+  }
+  33% {
+    transform: translate3d(-60px, -50px, 0) scale(0.92);
+  }
+  66% {
+    transform: translate3d(45px, -35px, 0) scale(1.1);
+  }
+}
+
+@keyframes orbFloat3 {
+  0%, 100% {
+    transform: translate3d(0, 0, 0) scale(1);
+  }
+  50% {
+    transform: translate3d(70px, -60px, 0) scale(1.18);
+  }
+}
+
+@keyframes orbFloat4 {
+  0%, 100% {
+    transform: translate3d(0, 0, 0) scale(1);
+  }
+  50% {
+    transform: translate3d(-50px, 60px, 0) scale(1.12);
+  }
+}
+
+@keyframes orbFloat5 {
+  0%, 100% {
+    transform: translate3d(0, 0, 0) scale(0.95);
+  }
+  50% {
+    transform: translate3d(40px, -40px, 0) scale(1.15);
+  }
+}
+
+.orb-1 {
+  animation: orbFloat1 18s infinite ease-in-out;
+  will-change: transform;
+}
+
+.orb-2 {
+  animation: orbFloat2 22s infinite ease-in-out;
+  will-change: transform;
+}
+
+.orb-3 {
+  animation: orbFloat3 20s infinite ease-in-out;
+  will-change: transform;
+}
+
+.orb-4 {
+  animation: orbFloat4 24s infinite ease-in-out;
+  will-change: transform;
+}
+
+.orb-5 {
+  animation: orbFloat5 26s infinite ease-in-out;
+  will-change: transform;
+}
+
+/* Rising Golden Cinema Embers (Movie Premiere Sparks) */
+@keyframes emberRise {
+  0% {
+    transform: translate3d(0, 100vh, 0) scale(0.4);
+    opacity: 0;
+  }
+  15% {
+    opacity: 0.85;
+  }
+  50% {
+    transform: translate3d(28px, 45vh, 0) scale(1.2);
+    opacity: 0.95;
+  }
+  85% {
+    opacity: 0.7;
+  }
+  100% {
+    transform: translate3d(-24px, -10vh, 0) scale(0.6);
+    opacity: 0;
+  }
+}
+
+.cinema-ember {
+  position: absolute;
+  bottom: -20px;
+  border-radius: 9999px;
+  background: radial-gradient(circle, #fbbf24 0%, #f59e0b 60%, rgba(217, 119, 6, 0) 100%);
+  animation: emberRise infinite cubic-bezier(0.25, 1, 0.5, 1);
+  pointer-events: none;
+  box-shadow: 0 0 14px rgba(251, 191, 36, 0.8), 0 0 28px rgba(245, 158, 11, 0.4);
+  will-change: transform, opacity;
+}
+
+.cinema-ember.ember-1 { width: 5px; height: 5px; }
+.cinema-ember.ember-2 { width: 7px; height: 7px; }
+.cinema-ember.ember-3 { width: 4px; height: 4px; }
+.cinema-ember.ember-4 { width: 6px; height: 6px; }
+.cinema-ember.ember-5 { width: 8px; height: 8px; }
+.cinema-ember.ember-6 { width: 5px; height: 5px; }
+
+/* Floating Bokeh Particles (Dust Motes in Cinema Projector) */
+@keyframes bokehDrift {
+  0% {
+    transform: translate3d(0, 0, 0) scale(0.8);
+    opacity: 0;
+  }
+  20% {
+    opacity: 0.65;
+  }
+  80% {
+    opacity: 0.85;
+  }
+  100% {
+    transform: translate3d(20px, -140px, 0) scale(1.35);
+    opacity: 0;
+  }
+}
+
+.bokeh-particle {
+  position: absolute;
+  border-radius: 9999px;
+  background: radial-gradient(circle, rgba(147, 197, 253, 0.95) 0%, rgba(59, 130, 246, 0) 70%);
+  animation: bokehDrift infinite ease-in-out;
+  pointer-events: none;
+  will-change: transform, opacity;
+}
+
+.bokeh-particle.p-1 {
+  width: 8px;
+  height: 8px;
+  box-shadow: 0 0 16px rgba(147, 197, 253, 0.85);
+}
+
+.bokeh-particle.p-2 {
+  width: 14px;
+  height: 14px;
+  box-shadow: 0 0 24px rgba(192, 132, 252, 0.75);
+}
+
+.bokeh-particle.p-3 {
+  width: 6px;
+  height: 6px;
+  box-shadow: 0 0 12px rgba(103, 232, 249, 0.85);
 }

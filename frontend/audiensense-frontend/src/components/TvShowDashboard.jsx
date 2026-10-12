@@ -51,7 +51,7 @@ export default function TvShowDashboard() {
 
   return (
     <main className="audien-dashboard min-h-screen overflow-hidden">
-      <section className="audien-hero px-5 py-16 sm:px-8 lg:px-12"><div className="relative mx-auto max-w-7xl"><p className="text-sm font-bold uppercase tracking-[0.35em] text-violet-600">Series worth staying up for</p><h1 className="audien-hero-title mt-4 max-w-3xl text-4xl font-black tracking-tight sm:text-6xl">Your next obsession <span>starts here.</span></h1><p className="mt-5 max-w-2xl text-lg leading-relaxed text-slate-600">Explore original series, award-winning dramas, and the latest television favorites.</p></div></section>
+      <section className="audien-hero px-5 py-16 sm:px-8 lg:px-12"><div className="relative mx-auto max-w-7xl"><p className="text-sm font-bold uppercase tracking-[0.35em] text-violet-400">Series worth staying up for</p><h1 className="audien-hero-title mt-4 max-w-3xl text-4xl font-black tracking-tight sm:text-6xl text-white">Your next obsession <span className="text-violet-400">starts here.</span></h1><p className="mt-5 max-w-2xl text-lg leading-relaxed text-slate-300">Explore original series, award-winning dramas, and the latest television favorites.</p></div></section>
       <div className="mx-auto max-w-7xl px-5 py-10 sm:px-8 lg:px-12">
         <div className="audien-panel mb-10 rounded-3xl p-5 sm:p-6">
           <p className="text-xs font-bold uppercase tracking-[0.3em] text-violet-600">Find your series</p><h2 className="mt-1 text-2xl font-bold">Search the TV catalog</h2>
